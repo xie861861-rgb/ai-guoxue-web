@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "skills": {
+    "duckduckgo-search": {
+      "version": "1.0.0",
+      "installedAt": 1770461700393
+    },
+    "autonomous-brain": {
+      "version": "1.0.0",
+      "installedAt": 1770461771975
+    },
+    "overcome-problem": {
+      "version": "1.0.0",
+      "installedAt": 1770461800366
+    },
+    "prd": {
+      "version": "2.0.5",
+      "installedAt": 1770463134365
+    },
+    "planning-with-files": {
+      "version": "1.2.0",
+      "installedAt": 1770463164674
+    },
+    "code-task-generator": {
+      "version": "0.1.0",
+      "installedAt": 1770463192288
+    },
+    "quality-documentation-manager": {
+      "version": "1.0.0",
+      "installedAt": 1770463219769
+    },
+    "todo": {
+      "version": "1.1.0",
+      "installedAt": 1770463249945
+    },
+    "project-router": {
+      "version": "1.0.0",
+      "installedAt": 1770463250127
+    },
+    "git-essentials": {
+      "version": "1.0.0",
+      "installedAt": 1770463712257
+    },
+    "git-workflows": {
+      "version": "1.0.0",
+      "installedAt": 1770463743923
+    },
+    "gitai-skill": {
+      "version": "1.0.2",
+      "installedAt": 1770463778392
+    },
+    "docker-essentials": {
+      "version": "1.0.0",
+      "installedAt": 1770463778533
+    },
+    "cicd-pipeline": {
+      "version": "1.0.0",
+      "installedAt": 1770463778723
+    },
+    "vercel-deploy": {
+      "version": "1.0.0",
+      "installedAt": 1770463779141
+    },
+    "security-audit": {
+      "version": "1.0.0",
+      "installedAt": 1770463817787
+    },
+    "test-master": {
+      "version": "0.1.0",
+      "installedAt": 1770463818039
+    },
+    "playwright-cli-2": {
+      "version": "0.1.0",
+      "installedAt": 1770463854310
+    },
+    "kubernetes": {
+      "version": "1.0.0",
+      "installedAt": 1770463891029
+    },
+    "web-deploy-github": {
+      "version": "1.0.0",
+      "installedAt": 1770463891539
+    },
+    "perf-profiler": {
+      "version": "1.0.0",
+      "installedAt": 1770464340960
+    },
+    "ai-e2e-gen": {
+      "version": "1.0.1",
+      "installedAt": 1770464378071
+    },
+    "test-driven-development": {
+      "version": "0.1.0",
+      "installedAt": 1770464378102
+    },
+    "prompt-optimizer": {
+      "version": "1.0.0",
+      "installedAt": 1770464378567
+    },
+    "prompt-performance-tester": {
+      "version": "1.1.4",
+      "installedAt": 1770464378576
+    }
+  }
+}

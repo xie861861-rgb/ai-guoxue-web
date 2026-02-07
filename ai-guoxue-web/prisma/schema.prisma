@@ -1,0 +1,306 @@
+// AI 国学智慧平台 - 简化版数据库 Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户系统 ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatar        String?
+  phone         String?
+  passwordHash  String?
+  role          UserRole  @default(USER)
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 关系
+  reservations  Reservation[]
+  courses       UserCourse[]
+  messages      Message[]
+  favorites     Favorite[]
+  memberships   MemberShip[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MENTOR
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  DELETED
+}
+
+// ==================== 导师系统 ====================
+
+model Mentor {
+  id          String    @id @default(cuid())
+  name        String
+  title       String    // 职称/头衔
+  avatar      String?
+  bio         String?   @db.Text
+  specialties String[]  // 专长领域
+  hourlyRate  Decimal   @db.Decimal(10, 2)
+  rating      Float     @default(0)
+  reviewCount Int       @default(0)
+  isActive    Boolean   @default(true)
+  sort        Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关系
+  courses     Course[]
+  reservations Reservation[]
+  timeSlots   TimeSlot[]
+}
+
+// ==================== 课程系统 ====================
+
+model Course {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?       @db.Text
+  coverImage  String?
+  price       Decimal       @db.Decimal(10, 2)
+  duration    Int           // 课时数
+  level       CourseLevel   @default(BEGINNER)
+  status      CourseStatus  @default(DRAFT)
+  categoryId  String?
+  mentorId    String?
+  sort        Int          @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // 关系
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  mentor      Mentor?       @relation(fields: [mentorId], references: [id])
+  classes     CourseClass[]
+  users       UserCourse[]
+}
+
+model CourseClass {
+  id          String    @id @default(cuid())
+  courseId    String
+  title       String
+  description String?   @db.Text
+  videoUrl    String?
+  duration    Int       // 分钟
+  sort        Int       @default(0)
+  isFree      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model UserCourse {
+  id          String    @id @default(cuid())
+  userId      String
+  courseId    String
+  progress    Int       @default(0)
+  status      CourseProgressStatus @default(NOT_STARTED)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CourseProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ==================== 预约系统 ====================
+
+model TimeSlot {
+  id          String    @id @default(cuid())
+  mentorId    String
+  date        DateTime  // 日期
+  startTime   String    // HH:mm
+  endTime     String    // HH:mm
+  isBooked    Boolean   @default(false)
+  maxPersons  Int       @default(1)
+  createdAt   DateTime  @default(now())
+
+  mentor      Mentor    @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+}
+
+model Reservation {
+  id              String            @id @default(cuid())
+  userId          String
+  mentorId        String?
+  courseId        String?
+  timeSlotId      String?
+  type            ReservationType
+  status          ReservationStatus @default(PENDING)
+  contactName     String
+  contactPhone    String
+  contactEmail    String?
+  remark          String?           @db.Text
+  amount          Decimal?          @db.Decimal(10, 2)
+  paymentStatus   PaymentStatus     @default(UNPAID)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mentor          Mentor?           @relation(fields: [mentorId], references: [id])
+  course          Course?           @relation(fields: [courseId], references: [id])
+  timeSlot        TimeSlot?        @relation(fields: [timeSlotId], references: [id])
+}
+
+enum ReservationType {
+  COURSE
+  MENTOR
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+// ==================== 分类 ====================
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  icon        String?
+  description String?
+  sort        Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  courses     Course[]
+}
+
+// ==================== 会员系统 ====================
+
+model MemberShip {
+  id          String    @id @default(cuid())
+  userId      String
+  level       MemberLevel
+  expiresAt   DateTime
+  status      MemberShipStatus @default(ACTIVE)
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum MemberLevel {
+  ENTRY      // 入门弟子
+  SCHOLAR    // 儒商
+  MASTER     // 掌门
+}
+
+enum MemberShipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+// ==================== AI 对话 ====================
+
+model Conversation {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String?
+  model       String    @default("doubao-pro-32k")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  messages    Message[]
+}
+
+model Message {
+  id              String    @id @default(cuid())
+  conversationId  String
+  role            MessageRole
+  content         String    @db.Text
+  createdAt       DateTime  @default(now())
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+// ==================== 收藏 ====================
+
+model Favorite {
+  id          String    @id @default(cuid())
+  userId      String
+  type        FavoriteType
+  objectId    String
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, objectId])
+}
+
+enum FavoriteType {
+  COURSE
+  ARTICLE
+}
+
+// ==================== 系统配置 ====================
+
+model SiteConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id        String    @id @default(cuid())
+  title     String
+  image     String
+  link      String?
+  sort      Int       @default(0)
+  isActive  Boolean   @default(true)
+  startTime DateTime?
+  endTime   DateTime?
+  createdAt DateTime  @default(now())
+}
