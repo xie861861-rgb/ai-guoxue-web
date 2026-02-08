@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   User,
   Calendar,
@@ -9,37 +11,43 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  ChevronRight,
-  Star,
   Clock,
-  TrendingUp,
+  Star,
+  Sparkles,
+  ChevronRight,
 } from "lucide-react";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { icon: Clock, label: "学习时长", value: "12.5", unit: "小时" },
-    { icon: BookOpen, label: "完成课程", value: "3", unit: "门" },
-    { icon: MessageSquare, label: "AI对话", value: "28", unit: "次" },
-    { icon: Star, label: "获得积分", value: "560", unit: "分" },
-  ];
+  useEffect(() => {
+    const userData = localStorage.getItem("guoxue_user");
+    if (!userData) {
+      router.push("/login");
+      return;
+    }
+    setUser(JSON.parse(userData));
+    setLoading(false);
+  }, [router]);
 
-  const recentCourses = [
-    { title: "《大学》精讲", progress: 80, lastStudy: "2026-02-07" },
-    { title: "道家养生之道", progress: 45, lastStudy: "2026-02-05" },
-    { title: "易经入门", progress: 20, lastStudy: "2026-02-03" },
-  ];
+  const handleLogout = () => {
+    localStorage.removeItem("guoxue_user");
+    router.push("/");
+  };
 
-  const upcomingReservations = [
-    {
-      mentor: "张明德",
-      title: "一对一咨询",
-      date: "2026-02-10",
-      time: "14:00-15:00",
-      status: "confirmed",
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#8B0000] border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   const menuItems = [
     { icon: User, label: "个人中心", value: "overview" },
@@ -52,24 +60,26 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#1A1A1A] text-white flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0D0D0D] border-r border-[#333] min-h-screen hidden lg:block">
+      <aside className="w-64 bg-[#0D0D0D] border-r border-[#333] min-h-screen hidden lg:block fixed left-0 top-0">
         <div className="p-6">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
+          <Link href="/" className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-[#8B0000] rounded-xl flex items-center justify-center">
-              <Star className="w-5 h-5 text-[#D4AF37]" />
+              <Sparkles className="w-5 h-5 text-[#D4AF37]" />
             </div>
             <span className="font-bold">AI 国学智慧</span>
-          </div>
+          </Link>
 
           {/* User Info */}
           <div className="flex items-center gap-3 p-4 bg-[#222] rounded-xl mb-6">
             <div className="w-12 h-12 bg-[#D4AF37] rounded-full flex items-center justify-center text-[#1A1A1A] font-bold text-xl">
-              张
+              {user?.name?.charAt(0) || "U"}
             </div>
             <div>
-              <p className="font-medium">张三</p>
-              <p className="text-xs text-[#D4AF37]">儒商会员</p>
+              <p className="font-medium">{user?.name || "用户"}</p>
+              <p className="text-xs text-[#D4AF37]">
+                {user?.role === "admin" ? "超级管理员" : "普通会员"}
+              </p>
             </div>
           </div>
 
@@ -91,8 +101,22 @@ export default function DashboardPage() {
             ))}
           </nav>
 
+          {/* Admin Link */}
+          {user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="w-full flex items-center gap-3 px-4 py-3 text-[#D4AF37] hover:bg-[#222] rounded-xl transition-all mt-4"
+            >
+              <Settings className="w-5 h-5" />
+              <span>后台管理</span>
+            </Link>
+          )}
+
           {/* Logout */}
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 mt-8">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 mt-8"
+          >
             <LogOut className="w-5 h-5" />
             <span>退出登录</span>
           </button>
@@ -100,16 +124,25 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 lg:ml-64">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold">欢迎回来，张总</h1>
-            <p className="text-gray-400">今天是 2026年2月7日 星期三</p>
+            <h1 className="text-2xl font-bold">
+              欢迎回来，{user?.name || "用户"}
+            </h1>
+            <p className="text-gray-400">
+              {new Date().toLocaleDateString("zh-CN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                weekday: "long",
+              })}
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <span className="px-4 py-2 bg-[#D4AF37]/20 text-[#D4AF37] rounded-full text-sm font-medium">
-              儒商会员
+              {user?.role === "admin" ? "超级管理员" : "普通会员"}
             </span>
           </div>
         </header>
@@ -119,7 +152,12 @@ export default function DashboardPage() {
           <>
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {stats.map((stat, index) => (
+              {[
+                { icon: Clock, label: "学习时长", value: "0", unit: "小时" },
+                { icon: BookOpen, label: "完成课程", value: "0", unit: "门" },
+                { icon: MessageSquare, label: "AI对话", value: "0", unit: "次" },
+                { icon: Star, label: "获得积分", value: "0", unit: "分" },
+              ].map((stat, index) => (
                 <div
                   key={index}
                   className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333]"
@@ -140,83 +178,78 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Recent Activity */}
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Recent Courses */}
-              <div className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333]">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold">最近学习</h2>
-                  <button className="text-[#D4AF37] text-sm hover:underline">
-                    查看全部
-                  </button>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <Link
+                href="/ai/chat"
+                className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333] hover:border-[#8B0000] transition-all group"
+              >
+                <div className="w-12 h-12 bg-[#8B0000] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-6 h-6 text-[#D4AF37]" />
                 </div>
-                <div className="space-y-4">
-                  {recentCourses.map((course, index) => (
-                    <div key={index} className="p-4 bg-[#1A1A1A] rounded-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium">{course.title}</h3>
-                        <span className="text-[#D4AF37]">{course.progress}%</span>
-                      </div>
-                      <div className="w-full bg-[#333] rounded-full h-2 mb-2">
-                        <div
-                          className="bg-gradient-to-r from-[#8B0000] to-[#D4AF37] h-2 rounded-full"
-                          style={{ width: `${course.progress}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        上次学习: {course.lastStudy}
-                      </p>
-                    </div>
-                  ))}
+                <h3 className="font-bold mb-1">AI 对话</h3>
+                <p className="text-sm text-gray-400">与国学智能体对话</p>
+              </Link>
+              <Link
+                href="/reservation"
+                className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333] hover:border-[#D4AF37] transition-all group"
+              >
+                <div className="w-12 h-12 bg-[#D4AF37] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Calendar className="w-6 h-6 text-[#1A1A1A]" />
                 </div>
-              </div>
+                <h3 className="font-bold mb-1">预约咨询</h3>
+                <p className="text-sm text-gray-400">预约名师咨询</p>
+              </Link>
+              <Link
+                href="/courses"
+                className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333] hover:border-[#8B0000] transition-all group"
+              >
+                <div className="w-12 h-12 bg-[#8B0000] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <BookOpen className="w-6 h-6 text-[#D4AF37]" />
+                </div>
+                <h3 className="font-bold mb-1">精品课程</h3>
+                <p className="text-sm text-gray-400">学习国学经典</p>
+              </Link>
+              <Link
+                href="/membership"
+                className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333] hover:border-[#D4AF37] transition-all group"
+              >
+                <div className="w-12 h-12 bg-[#D4AF37] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Star className="w-6 h-6 text-[#1A1A1A]" />
+                </div>
+                <h3 className="font-bold mb-1">会员中心</h3>
+                <p className="text-sm text-gray-400">查看会员权益</p>
+              </Link>
+            </div>
 
-              {/* Upcoming Reservations */}
-              <div className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333]">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold">即将到来的预约</h2>
-                  <button className="text-[#D4AF37] text-sm hover:underline">
-                    查看全部
-                  </button>
-                </div>
-                {upcomingReservations.length > 0 ? (
-                  <div className="p-4 bg-[#1A1A1A] rounded-xl">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-medium">
-                          {upcomingReservations[0].mentor} 老师
-                        </h3>
-                        <p className="text-sm text-gray-400">
-                          {upcomingReservations[0].title}
-                        </p>
-                      </div>
-                      <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">
-                        已确认
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {upcomingReservations[0].date}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {upcomingReservations[0].time}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-400 text-center py-8">
-                    暂无预约
-                  </p>
-                )}
+            {/* Recent Activity */}
+            <div className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333]">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold">最近活动</h2>
+              </div>
+              <div className="text-center py-12">
+                <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">还没有任何活动</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  开始与 AI 对话或预约咨询来记录您的第一次活动
+                </p>
               </div>
             </div>
           </>
         )}
 
+        {/* Other Tabs */}
+        {activeTab !== "overview" && (
+          <div className="bg-gradient-to-br from-[#222] to-[#1A1A1A] rounded-2xl p-6 border border-[#333]">
+            <h2 className="text-lg font-bold mb-4">{menuItems.find((i) => i.value === activeTab)?.label}</h2>
+            <div className="text-center py-12">
+              <p className="text-gray-400">该功能正在开发中...</p>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Menu */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0D0D0D] border-t border-[#333] p-4">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0D0D0D] border-t border-[#333] p-4 pb-8">
           <div className="flex justify-around">
             {menuItems.slice(0, 5).map((item) => (
               <button

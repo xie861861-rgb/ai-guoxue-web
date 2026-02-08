@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, Sparkles } from "lucide-react";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -15,27 +17,67 @@ export default function RegisterPage() {
     agreeTerms: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
     if (formData.password !== formData.confirmPassword) {
-      alert("两次输入的密码不一致");
+      setError("两次输入的密码不一致");
       return;
     }
     if (!formData.agreeTerms) {
-      alert("请同意用户协议和隐私政策");
+      setError("请同意用户协议和隐私政策");
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError("密码长度至少6位");
       return;
     }
 
     setIsLoading(true);
-    // TODO: 注册 API
+
+    // 模拟注册延迟
     await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // 保存用户到 localStorage
+    const users = JSON.parse(localStorage.getItem("guoxue_users") || "[]");
+
+    // 检查邮箱是否已存在
+    if (users.find((u: any) => u.email === formData.email)) {
+      setError("该邮箱已被注册");
+      setIsLoading(false);
+      return;
+    }
+
+    // 添加新用户
+    const newUser = {
+      name: formData.name,
+      email: formData.email.toLowerCase(),
+      phone: formData.phone,
+      password: formData.password,
+      role: "user",
+      createdAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    localStorage.setItem("guoxue_users", JSON.stringify(users));
+
+    // 自动登录
+    const userData = {
+      email: formData.email.toLowerCase(),
+      name: formData.name,
+      role: "user",
+      loginTime: new Date().toISOString()
+    };
+    localStorage.setItem("guoxue_user", JSON.stringify(userData));
+
     setIsLoading(false);
-    alert("注册成功！请登录。");
+    router.push("/dashboard");
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1A11] flex">
+    <div className="min-h-screen bg-[#1A1A1A] flex">
       {/* Left Side - Brand */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#8B0000] to-[#1A1A1A] p-12 flex-col justify-between">
         <div>
@@ -87,9 +129,11 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-[#8B0000] rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-[#D4AF37]" />
-            </div>
+            <Link href="/">
+              <div className="w-12 h-12 bg-[#8B0000] rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+              </div>
+            </Link>
             <span className="font-bold text-xl">AI 国学智慧</span>
           </div>
 
@@ -97,6 +141,13 @@ export default function RegisterPage() {
             <h2 className="text-2xl font-bold mb-2">创建账号</h2>
             <p className="text-gray-400">欢迎加入 AI 国学智慧平台</p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
@@ -167,7 +218,7 @@ export default function RegisterPage() {
                     setFormData({ ...formData, password: e.target.value })
                   }
                   className="w-full px-4 py-3 bg-[#222] border border-[#333] rounded-xl focus:border-[#D4AF37] focus:outline-none transition-colors pr-12"
-                  placeholder="请输入密码"
+                  placeholder="请输入密码（至少6位）"
                 />
                 <button
                   type="button"
@@ -243,23 +294,6 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="flex-1 h-px bg-[#333]" />
-            <span className="text-gray-500 text-sm">或</span>
-            <div className="flex-1 h-px bg-[#333]" />
-          </div>
-
-          {/* Social Login */}
-          <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 py-3 bg-[#222] border border-[#333] rounded-xl hover:bg-[#333] transition-colors">
-              <span className="text-lg">微信</span>
-            </button>
-            <button className="flex items-center justify-center gap-2 py-3 bg-[#222] border border-[#333] rounded-xl hover:bg-[#333] transition-colors">
-              <span className="text-lg">手机号</span>
-            </button>
-          </div>
 
           {/* Mobile Login Link */}
           <div className="lg:hidden mt-8 text-center">

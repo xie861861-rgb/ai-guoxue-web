@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Sparkles, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Sparkles, ArrowLeft, User, Shield } from "lucide-react";
+
+// 演示账户
+const DEMO_ACCOUNTS = {
+  admin: { password: "admin123", role: "admin", name: "超级管理员" },
+  demo: { password: "demo123", role: "user", name: "演示用户" },
+  test: { password: "test123", role: "user", name: "测试用户" }
+};
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
   const [formData, setFormData] = useState({
@@ -14,18 +23,76 @@ export default function LoginPage() {
     remember: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // 检查是否已登录
+    const user = localStorage.getItem("guoxue_user");
+    if (user) {
+      const userData = JSON.parse(user);
+      if (userData.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: 登录 API
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setError("");
+
+    // 模拟登录延迟
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const email = formData.email.toLowerCase().trim();
+    const password = formData.password;
+
+    // 检查演示账户
+    if (DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS]) {
+      const account = DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS];
+      if (account.password === password) {
+        const userData = {
+          email,
+          name: account.name,
+          role: account.role,
+          loginTime: new Date().toISOString()
+        };
+        localStorage.setItem("guoxue_user", JSON.stringify(userData));
+        setIsLoading(false);
+        if (account.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
+        return;
+      }
+    }
+
+    // 检查是否有注册用户
+    const users = JSON.parse(localStorage.getItem("guoxue_users") || "[]");
+    const user = users.find((u: any) => u.email === email);
+
+    if (user && user.password === password) {
+      const userData = {
+        email,
+        name: user.name,
+        role: "user",
+        loginTime: new Date().toISOString()
+      };
+      localStorage.setItem("guoxue_user", JSON.stringify(userData));
+      setIsLoading(false);
+      router.push("/dashboard");
+      return;
+    }
+
+    setError("邮箱或密码错误");
     setIsLoading(false);
-    alert("登录成功！");
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1A1] flex">
+    <div className="min-h-screen bg-[#1A1A1A] flex">
       {/* Left Side - Brand */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#8B0000] to-[#1A1A1A] p-12 flex-col justify-between">
         <div>
@@ -47,38 +114,23 @@ export default function LoginPage() {
             登录您的账号，继续与国学大师对话，学习经典智慧，开启精神成长之旅。
           </p>
 
-          <div className="mt-12 space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-xl">
-                🤖
+          {/* Demo Accounts Info */}
+          <div className="mt-8 p-4 bg-white/10 rounded-xl">
+            <h3 className="text-[#D4AF37] font-bold mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" /> 演示账户
+            </h3>
+            <div className="space-y-2 text-sm text-white/80">
+              <div className="flex justify-between">
+                <span>👤 管理员:</span>
+                <span className="font-mono">admin / admin123</span>
               </div>
-              <div>
-                <h3 className="font-bold text-white mb-1">AI 国学助手</h3>
-                <p className="text-white/60 text-sm">
-                  24 小时在线，随时为您解答国学疑问
-                </p>
+              <div className="flex justify-between">
+                <span>👤 演示用户:</span>
+                <span className="font-mono">demo / demo123</span>
               </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-xl">
-                👨‍🏫
-              </div>
-              <div>
-                <h3 className="font-bold text-white mb-1">名师一对一</h3>
-                <p className="text-white/60 text-sm">
-                  预约国学大师，获取专属指导
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-xl">
-                📚
-              </div>
-              <div>
-                <h3 className="font-bold text-white mb-1">精品课程</h3>
-                <p className="text-white/60 text-sm">
-                  海量国学课程，随时随地学习
-                </p>
+              <div className="flex justify-between">
+                <span>👤 测试用户:</span>
+                <span className="font-mono">test / test123</span>
               </div>
             </div>
           </div>
@@ -109,6 +161,13 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold mb-2">欢迎登录</h2>
             <p className="text-gray-400">使用您的账号登录</p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           {/* Login Method Tabs */}
           <div className="flex bg-[#222] rounded-xl p-1 mb-6">
@@ -240,25 +299,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="flex-1 h-px bg-[#333]" />
-            <span className="text-gray-500 text-sm">或</span>
-            <div className="flex-1 h-px bg-[#333]" />
-          </div>
-
-          {/* Quick Login */}
-          <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 py-3 bg-[#222] border border-[#333] rounded-xl hover:bg-[#333] transition-colors">
-              <span className="text-lg">💬</span>
-              <span>微信登录</span>
-            </button>
-            <button className="flex items-center justify-center gap-2 py-3 bg-[#222] border border-[#333] rounded-xl hover:bg-[#333] transition-colors">
-              <span className="text-lg">📱</span>
-              <span>验证码登录</span>
-            </button>
-          </div>
 
           {/* Mobile Register Link */}
           <div className="lg:hidden mt-8 text-center">

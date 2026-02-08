@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles, Calendar, Crown, BookOpen, ArrowRight } from "lucide-react";
+import { Sparkles, Calendar, Crown, BookOpen, ArrowRight, User, LogIn } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -51,6 +51,24 @@ export default function HomePage() {
             >
               <Calendar className="w-5 h-5" />
               预约名师咨询
+            </Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="flex flex-wrap gap-4 justify-center mt-8">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#333] text-white font-medium rounded-xl hover:bg-[#444] transition-colors"
+            >
+              <LogIn className="w-4 h-4" />
+              会员登录
+            </Link>
+            <Link
+              href="/register"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-[#D4AF37] text-[#D4AF37] font-medium rounded-xl hover:bg-[#D4AF37] hover:text-[#1A1A1A] transition-all"
+            >
+              <User className="w-4 h-4" />
+              免费注册
             </Link>
           </div>
 

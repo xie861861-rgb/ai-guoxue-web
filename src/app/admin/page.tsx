@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -13,15 +14,48 @@ import {
   Settings,
   LogOut,
   Search,
-  ChevronRight,
   TrendingUp,
   DollarSign,
   UserPlus,
-  RefreshCw,
+  Sparkles,
 } from "lucide-react";
 
-export default function AdminLayout() {
+export default function AdminPage() {
+  const router = useRouter();
   const [activePage, setActivePage] = useState("dashboard");
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("guoxue_user");
+    if (!userData) {
+      router.push("/login");
+      return;
+    }
+    const parsedUser = JSON.parse(userData);
+    if (parsedUser.role !== "admin") {
+      router.push("/dashboard");
+      return;
+    }
+    setUser(parsedUser);
+    setLoading(false);
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("guoxue_user");
+    router.push("/");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#8B0000] border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   const menuItems = [
     { icon: LayoutDashboard, label: "数据概览", page: "dashboard" },
@@ -68,18 +102,18 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#1A1A1] text-white flex flex-col">
+      <aside className="w-64 bg-[#1A1A1A] text-white flex flex-col fixed left-0 top-0 h-screen">
         {/* Logo */}
         <div className="p-6 border-b border-[#333]">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#8B0000] rounded-xl flex items-center justify-center">
-              <span className="text-[#D4AF37] font-bold text-xl">AI</span>
+              <Sparkles className="w-5 h-5 text-[#D4AF37]" />
             </div>
             <div>
               <p className="font-bold">国学智慧</p>
               <p className="text-xs text-gray-500">管理后台</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Menu */}
@@ -100,9 +134,19 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        {/* Logout */}
+        {/* User & Logout */}
         <div className="p-4 border-t border-[#333]">
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-[#222] rounded-xl transition-all">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#222] rounded-xl transition-all mb-2"
+          >
+            <Settings className="w-5 h-5" />
+            <span>返回用户中心</span>
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-[#222] rounded-xl transition-all"
+          >
             <LogOut className="w-5 h-5" />
             <span>退出登录</span>
           </button>
@@ -110,10 +154,10 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col ml-64">
         {/* Header */}
         <header className="h-16 bg-white border-b flex items-center justify-between px-6">
-          <h1 className="text-xl font-bold text-[#1A1A1]">
+          <h1 className="text-xl font-bold text-gray-800">
             {menuItems.find((m) => m.page === activePage)?.label}
           </h1>
           <div className="flex items-center gap-4">
@@ -127,10 +171,10 @@ export default function AdminLayout() {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#8B0000] rounded-full flex items-center justify-center text-white font-bold">
-                管
+                {user?.name?.charAt(0) || "管"}
               </div>
               <div>
-                <p className="font-medium text-sm">管理员</p>
+                <p className="font-medium text-sm">{user?.name || "管理员"}</p>
                 <p className="text-xs text-gray-500">超级管理员</p>
               </div>
             </div>
@@ -142,7 +186,7 @@ export default function AdminLayout() {
           {activePage === "dashboard" && (
             <div className="space-y-6">
               {/* Stats Grid */}
-              <div className="grid grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat, index) => (
                   <div
                     key={index}
@@ -167,17 +211,17 @@ export default function AdminLayout() {
               </div>
 
               {/* Charts Row */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <h3 className="font-bold mb-4">用户增长趋势</h3>
                   <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">
-                    图表区域
+                    📊 图表区域
                   </div>
                 </div>
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <h3 className="font-bold mb-4">收入分布</h3>
                   <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">
-                    图表区域
+                    💰 图表区域
                   </div>
                 </div>
               </div>
@@ -207,9 +251,7 @@ export default function AdminLayout() {
                         </div>
                         <div>
                           <p className="font-medium">{item.action}</p>
-                          <p className="text-sm text-gray-500">
-                            {item.user}
-                          </p>
+                          <p className="text-sm text-gray-500">{item.user}</p>
                         </div>
                       </div>
                       <span className="text-gray-400 text-sm">{item.time}</span>
@@ -220,248 +262,21 @@ export default function AdminLayout() {
             </div>
           )}
 
-          {activePage === "mentors" && <MentorsPage />}
-          {activePage === "membership" && <MembershipPage />}
+          {/* Other Pages */}
+          {activePage !== "dashboard" && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <h2 className="text-lg font-bold mb-4">
+                {menuItems.find((m) => m.page === activePage)?.label}
+              </h2>
+              <div className="text-center py-12">
+                <p className="text-gray-400">
+                  该功能正在开发中...
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
-    </div>
-  );
-}
-
-function MentorsPage() {
-  const mentors = [
-    {
-      id: 1,
-      name: "张明德",
-      title: "国学泰斗",
-      specialty: "儒家经典",
-      status: "在线",
-      rating: 4.9,
-      students: 1256,
-      price: 2000,
-    },
-    {
-      id: 2,
-      name: "李信道",
-      title: "道家养生专家",
-      specialty: "养生功法",
-      status: "忙碌",
-      rating: 4.8,
-      students: 892,
-      price: 1800,
-    },
-    {
-      id: 3,
-      name: "王易经",
-      title: "易经大师",
-      specialty: "六爻占卜",
-      status: "离线",
-      rating: 4.9,
-      students: 2103,
-      price: 3000,
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-4">
-          <input
-            type="text"
-            placeholder="搜索导师..."
-            className="px-4 py-2 bg-white rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#8B0000]"
-          />
-          <select className="px-4 py-2 bg-white rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#8B0000]">
-            <option value="">全部状态</option>
-            <option value="online">在线</option>
-            <option value="busy">忙碌</option>
-            <option value="offline">离线</option>
-          </select>
-        </div>
-        <button className="px-6 py-2 bg-[#8B0000] text-white rounded-lg hover:bg-[#5C0000] transition-colors flex items-center gap-2">
-          <UserPlus className="w-5 h-5" />
-          添加导师
-        </button>
-      </div>
-
-      {/* Mentors Table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                导师
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                专长
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                状态
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                评分
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                学员数
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                价格
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                操作
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {mentors.map((mentor) => (
-              <tr key={mentor.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-[#F5F0E6] rounded-full flex items-center justify-center text-[#8B0000] font-bold">
-                      {mentor.name[0]}
-                    </div>
-                    <div>
-                      <p className="font-medium">{mentor.name}</p>
-                      <p className="text-sm text-gray-500">{mentor.title}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1 bg-[#F5F0E6] text-[#8B0000] rounded-full text-sm">
-                    {mentor.specialty}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      mentor.status === "在线"
-                        ? "bg-green-100 text-green-700"
-                        : mentor.status === "忙碌"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {mentor.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-[#D4AF37]">⭐ {mentor.rating}</span>
-                </td>
-                <td className="px-6 py-4">{mentor.students.toLocaleString()}</td>
-                <td className="px-6 py-4">¥{mentor.price}/小时</td>
-                <td className="px-6 py-4">
-                  <div className="flex gap-2">
-                    <button className="p-2 text-[#8B0000] hover:bg-[#F5F0E6] rounded-lg">
-                      编辑
-                    </button>
-                    <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
-                      详情
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function MembershipPage() {
-  const stats = [
-    { label: "总会员数", value: "2,586", change: "+12.5%" },
-    { label: "本月新增", value: "156", change: "+8.2%" },
-    { label: "续费率", value: "78%", change: "+2.1%" },
-    { label: "总收入", value: "¥ 86.5万", change: "+23.1%" },
-  ];
-
-  const members = [
-    { name: "李总", level: "掌门", spent: "¥ 50,000", joined: "2026-01-15" },
-    { name: "王总", level: "儒商", spent: "¥ 9,999", joined: "2026-01-20" },
-    { name: "张总", level: "儒商", spent: "¥ 9,999", joined: "2026-02-01" },
-    { name: "赵总", level: "入门弟子", spent: "¥ 999", joined: "2026-02-05" },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-2xl p-6 shadow-sm">
-            <p className="text-gray-500 text-sm mb-1">{stat.label}</p>
-            <p className="text-3xl font-bold">{stat.value}</p>
-            <p className="text-green-500 text-sm">{stat.change}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Members Table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b flex items-center justify-between">
-          <h3 className="font-bold">会员列表</h3>
-          <div className="flex gap-4">
-            <select className="px-4 py-2 bg-gray-100 rounded-lg border-0 focus:ring-2 focus:ring-[#8B0000]">
-              <option value="">全部等级</option>
-              <option value="master">掌门</option>
-              <option value="scholar">儒商</option>
-              <option value="entry">入门弟子</option>
-            </select>
-            <button className="px-4 py-2 bg-[#8B0000] text-white rounded-lg hover:bg-[#5C0000]">
-              导出
-            </button>
-          </div>
-        </div>
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                会员
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                等级
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                累计消费
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                加入时间
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                操作
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {members.map((member, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium">{member.name}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      member.level === "掌门"
-                        ? "bg-[#D4AF37]/20 text-[#D4AF37]"
-                        : member.level === "儒商"
-                        ? "bg-[#8B0000]/20 text-[#8B0000]"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {member.level}
-                  </span>
-                </td>
-                <td className="px-6 py-4">{member.spent}</td>
-                <td className="px-6 py-4 text-gray-500">{member.joined}</td>
-                <td className="px-6 py-4">
-                  <button className="text-[#8B0000] hover:underline text-sm">
-                    查看详情
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
