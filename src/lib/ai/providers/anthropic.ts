@@ -25,8 +25,10 @@ export class AnthropicProvider implements AIProvider {
     });
 
     const usage = response.usage;
+    const contentBlock = response.content[0];
+    const content = contentBlock && 'text' in contentBlock ? contentBlock.text : '';
     return {
-      content: response.content[0]?.text || '',
+      content,
       usage: {
         promptTokens: usage.input_tokens,
         completionTokens: usage.output_tokens,

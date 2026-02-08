@@ -425,7 +425,7 @@ export default function MentorBookingPage() {
                 />
               </div>
 
-Name="flex justify              <div class-center gap-4 mt-8">
+              <div className="flex justify-center gap-4 mt-8">
                 <button
                   type="button"
                   onClick={() => setStep(2)}

@@ -26,14 +26,21 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // 检查是否已登录
+    // 检查是否已登录，避免循环重定向
     const user = localStorage.getItem("guoxue_user");
     if (user) {
-      const userData = JSON.parse(user);
-      if (userData.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
+      try {
+        const userData = JSON.parse(user);
+        if (userData && userData.role) {
+          if (userData.role === "admin") {
+            router.replace("/admin");
+          } else {
+            router.replace("/dashboard");
+          }
+        }
+      } catch (e) {
+        // 数据损坏，清除并留在登录页
+        localStorage.removeItem("guoxue_user");
       }
     }
   }, [router]);
@@ -47,24 +54,27 @@ export default function LoginPage() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const email = formData.email.toLowerCase().trim();
+    const username = email.split('@')[0]; // 支持 admin@example.com 或直接输入 admin
     const password = formData.password;
 
-    // 检查演示账户
-    if (DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS]) {
-      const account = DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS];
+    // 检查演示账户 (支持用户名或邮箱格式)
+    if (DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS] || DEMO_ACCOUNTS[username as keyof typeof DEMO_ACCOUNTS]) {
+      const accountKey = DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS] ? email : username;
+      const account = DEMO_ACCOUNTS[accountKey as keyof typeof DEMO_ACCOUNTS];
       if (account.password === password) {
         const userData = {
-          email,
+          email: `${accountKey}@demo.com`,
           name: account.name,
           role: account.role,
           loginTime: new Date().toISOString()
         };
         localStorage.setItem("guoxue_user", JSON.stringify(userData));
         setIsLoading(false);
+        // 使用 window.location 强制跳转
         if (account.role === "admin") {
-          router.push("/admin");
+          window.location.href = "/admin";
         } else {
-          router.push("/dashboard");
+          window.location.href = "/dashboard";
         }
         return;
       }
@@ -179,7 +189,7 @@ export default function LoginPage() {
                   : "text-gray-400 hover:text-white"
               }`}
             >
-              邮箱登录
+              用户名登录
             </button>
             <button
               onClick={() => setLoginMethod("phone")}
@@ -199,8 +209,8 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 {loginMethod === "email" ? (
                   <>
-                    <Mail className="w-4 h-4 inline mr-1" />
-                    电子邮箱
+                    <User className="w-4 h-4 inline mr-1" />
+                    用户名
                   </>
                 ) : (
                   <>
@@ -210,7 +220,7 @@ export default function LoginPage() {
                 )}
               </label>
               <input
-                type={loginMethod === "email" ? "email" : "tel"}
+                type={loginMethod === "email" ? "text" : "tel"}
                 required
                 value={loginMethod === "email" ? formData.email : formData.phone}
                 onChange={(e) =>
@@ -222,7 +232,7 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 bg-[#222] border border-[#333] rounded-xl focus:border-[#D4AF37] focus:outline-none transition-colors"
                 placeholder={
                   loginMethod === "email"
-                    ? "请输入邮箱地址"
+                    ? "请输入用户名 (如: admin)"
                     : "请输入手机号"
                 }
               />

@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
     if (!message) {
       return NextResponse.json(
         { error: "消息内容不能为空" },
-       400 }
+        { status: 400 }
       );
- { status:     }
+    }
 
     // 默认使用 MiniMax
     const selectedModel = modelId || 'minimax-abab6.5s-chat';

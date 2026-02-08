@@ -29,16 +29,30 @@ export default function AdminPage() {
   useEffect(() => {
     const userData = localStorage.getItem("guoxue_user");
     if (!userData) {
-      router.push("/login");
+      // 未登录，跳转到登录页
+      router.replace("/login");
       return;
     }
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== "admin") {
-      router.push("/dashboard");
-      return;
+    try {
+      const parsedUser = JSON.parse(userData);
+      // 验证数据完整性
+      if (!parsedUser || !parsedUser.role) {
+        localStorage.removeItem("guoxue_user");
+        router.replace("/login");
+        return;
+      }
+      if (parsedUser.role !== "admin") {
+        // 不是管理员，跳转到用户中心
+        router.replace("/dashboard");
+        return;
+      }
+      setUser(parsedUser);
+    } catch (e) {
+      localStorage.removeItem("guoxue_user");
+      router.replace("/login");
+    } finally {
+      setLoading(false);
     }
-    setUser(parsedUser);
-    setLoading(false);
   }, [router]);
 
   const handleLogout = () => {

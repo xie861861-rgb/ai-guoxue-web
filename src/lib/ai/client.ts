@@ -1,5 +1,5 @@
 // 统一 AI 客户端接口
-import { ModelConfig, AVAILABLE_MODELS } from '../config/models';
+import { ModelConfig, AVAILABLE_MODELS } from '@/config/models';
 
 // 消息类型
 export interface ChatMessage {
@@ -73,27 +73,27 @@ export async function createAIClient(modelId: string): Promise<AIProvider> {
 
   switch (modelConfig.provider) {
     case 'minimax':
-      const { MinimaxProvider } = await import('./minimax/provider');
+      const { MinimaxProvider } = await import('./providers/minimax');
       return new MinimaxProvider(modelConfig.modelId);
     
     case 'doubao':
-      const { DoubaoProvider } = await import('./doubao/provider');
+      const { DoubaoProvider } = await import('./providers/doubao');
       return new DoubaoProvider(modelConfig.modelId, modelConfig.endpoint!);
     
     case 'deepseek':
-      const { DeepSeekProvider } = await import('./deepseek/provider');
+      const { DeepSeekProvider } = await import('./providers/deepseek');
       return new DeepSeekProvider(modelConfig.modelId);
     
     case 'openai':
-      const { OpenAIProvider } = await import('./openai/provider');
+      const { OpenAIProvider } = await import('./providers/openai');
       return new OpenAIProvider(modelConfig.modelId);
     
     case 'anthropic':
-      const { AnthropicProvider } = await import('./anthropic/provider');
+      const { AnthropicProvider } = await import('./providers/anthropic');
       return new AnthropicProvider(modelConfig.modelId);
     
     case 'moonshot':
-      const { MoonshotProvider } = await import('./moonshot/provider');
+      const { MoonshotProvider } = await import('./providers/moonshot');
       return new MoonshotProvider(modelConfig.modelId, modelConfig.endpoint!);
     
     default:

@@ -8,7 +8,6 @@ export default function HomePage() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000] via-[#1A1A1A] to-[#0D0D0D]" />
-        <div className="absolute inset-0 bg-[url('/images/chinese-pattern.png')] opacity-5" />
         
         {/* Floating Elements */}
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#8B0000]/20 rounded-full blur-3xl animate-pulse" />

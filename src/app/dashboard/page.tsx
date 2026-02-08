@@ -26,11 +26,23 @@ export default function DashboardPage() {
   useEffect(() => {
     const userData = localStorage.getItem("guoxue_user");
     if (!userData) {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
-    setUser(JSON.parse(userData));
-    setLoading(false);
+    try {
+      const parsedUser = JSON.parse(userData);
+      if (parsedUser && parsedUser.role) {
+        setUser(parsedUser);
+      } else {
+        localStorage.removeItem("guoxue_user");
+        router.replace("/login");
+      }
+    } catch (e) {
+      localStorage.removeItem("guoxue_user");
+      router.replace("/login");
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
 
   const handleLogout = () => {

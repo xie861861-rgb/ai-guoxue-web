@@ -40,30 +40,51 @@ export class MinimaxProvider implements AIProvider {
   }
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
-    const response = await axios.post<MiniMaxResponse>(
-      `${this.endpoint}/text/chatcompletion_v2`,
-      {
-        model: this.modelId,
-        messages: request.messages,
-        temperature: request.temperature ?? 0.7,
-        max_tokens: request.maxTokens ?? 2048
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
+    try {
+      const response = await axios.post<MiniMaxResponse>(
+        `${this.endpoint}/text/chatcompletion_v2`,
+        {
+          model: this.modelId,
+          messages: request.messages,
+          temperature: request.temperature ?? 0.7,
+          max_tokens: request.maxTokens ?? 2048
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
+      );
 
-    const data = response.data;
-    return {
-      content: data.choices[0]?.message?.content || '',
-      usage: {
-        promptTokens: data.usage.prompt_tokens,
-        completionTokens: data.usage.completion_tokens,
-        totalTokens: data.usage.total_tokens
+      const data = response.data;
+      
+      // 检查响应数据是否有效
+      if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        console.error('MiniMax API 返回无效数据:', data);
+        throw new Error('AI 服务返回无效响应');
       }
-    };
+      
+      const choice = data.choices[0];
+      if (!choice.message) {
+        console.error('MiniMax API 返回无效消息:', choice);
+        throw new Error('AI 服务返回无效消息');
+      }
+      
+      return {
+        content: choice.message.content || '',
+        usage: {
+          promptTokens: data.usage?.prompt_tokens || 0,
+          completionTokens: data.usage?.completion_tokens || 0,
+          totalTokens: data.usage?.total_tokens || 0
+        }
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('MiniMax API 错误:', error.response?.data || error.message);
+        throw new Error(`AI 服务错误: ${error.response?.data?.message || error.message}`);
+      }
+      throw error;
+    }
   }
 }

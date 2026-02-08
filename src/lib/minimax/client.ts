@@ -248,7 +248,7 @@ export async function getGuoxueResponse(
   return minimaxClient.guoxueChat(message, { category });
 }
 
-export async function getStreamResponse(
+export function getStreamResponse(
   message: string,
   category?: string
 ): AsyncGenerator<string> {
